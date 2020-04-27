@@ -6,6 +6,13 @@ A simple event dispatcher for c++ 17.
 # dependency
 None
 
+# interface
+
+1. create dispatcher `dispatcher<int, std::string> cur_dispatcher;` the template argument represent for the event type the dispatcher recieve
+2. add listener `auto handler_3 = cur_dispatcher.add_listener(std::string("hehe"), &callback_3);` register a event listener for specific event, return a handler for the use of remove.
+3. remove listener `cur_dispatcher.remove_listener(handler_5);` user should provide correct handler
+4. dispatch event `cur_dispatcher.dispatch(std::string("hehe"), string("hehe"));`, two argument, the first argument is the event, the second argument is the detail for current event, remove/add listener is allowed when dispatching. recursive dispatch is detected to stop.
+
 # example
 
 ```c++
