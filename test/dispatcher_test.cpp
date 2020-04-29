@@ -2,7 +2,7 @@
 #include <iostream>
 #include <dispatcher.h>
 using namespace std;
-using namespace spiritsaway::event;
+using namespace spiritsaway::event_util;
 
 void callback_1(const int& key, const int& value)
 {

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.11)
-PROJECT(dispatcher)
+PROJECT(event_util)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -16,6 +16,11 @@ target_include_directories(${CMAKE_PROJECT_NAME} INTERFACE $<INSTALL_INTERFACE:i
 add_executable(dispatcher_test ${CMAKE_SOURCE_DIR}/test/dispatcher_test.cpp)
 target_link_libraries(dispatcher_test ${CMAKE_PROJECT_NAME})
 
+add_executable(state_machine_test ${CMAKE_SOURCE_DIR}/test/state_machine_test.cpp)
+target_link_libraries(state_machine_test ${CMAKE_PROJECT_NAME})
+
+add_executable(boost_sml_cmp ${CMAKE_SOURCE_DIR}/test/boost_sml_cmp.cpp)
+target_link_libraries(boost_sml_cmp ${CMAKE_PROJECT_NAME})
 
 foreach(p LIB INCLUDE)
 	set(var CMAKE_INSTALL_${p}DIR)

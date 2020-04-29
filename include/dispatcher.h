@@ -7,7 +7,7 @@
 #include <functional>
 #include <unordered_set>
 #include <memory>
-namespace spiritsaway::event
+namespace spiritsaway::event_util
 {
 
 	class event_data_wrapper
