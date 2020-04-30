@@ -50,10 +50,14 @@ namespace spiritsaway::event_util
 	class dispatcher_impl
 	{
 	private:
-		std::unordered_map<K, std::uint32_t> event_ids; // map every event to one index
-		std::vector< std::unordered_map<std::uint32_t, std::unordered_set<std::uint32_t>>> event_id_to_callbacks;// event callbacks for event_id
+		struct event_desc
+		{
+			std::uint16_t event_id;
+			bool during_dispatch = false; // to stop recursive dispatch
+		};
+		std::unordered_map<K, event_desc> event_descs; // map every event to one index
+		std::vector< std::unordered_map<std::uint16_t, std::unordered_set<std::uint32_t>>> event_id_to_callbacks;// event callbacks for event_id
 
-		std::unordered_set<K> event_stack;//to stop recursive dispatch
 		std::unordered_map< std::uint32_t, std::unique_ptr<std::function<void(const K&, const event_data_wrapper&)>>> handler_to_callbacks;
 		std::vector<std::uint32_t> recycle_callback_idxes;
 		std::uint32_t next_callback_idxes;
@@ -86,19 +90,19 @@ namespace spiritsaway::event_util
 		template <typename V>
 		void dispatch(const K& event, const V& data, std::uint32_t cur_data_type_id)
 		{
-			auto cur_iter = event_stack.find(event);
-			if (cur_iter != event_stack.end())
-			{
-				// already dispatch this event
-				return;
-			}
-			auto cur_event_id_iter = event_ids.find(event);
-			if (cur_event_id_iter == event_ids.end())
+
+			auto cur_event_desc_iter = event_descs.find(event);
+			if (cur_event_desc_iter == event_descs.end())
 			{
 				// this event is not registered
 				return;
 			}
-			auto cur_event_id = cur_event_id_iter->second;
+			if (cur_event_desc_iter->second.during_dispatch)
+			{
+				// recursive dispatch
+				return;
+			}
+			auto cur_event_id = cur_event_desc_iter->second.event_id;
 			const auto& cur_event_callbacks = event_id_to_callbacks[cur_event_id];
 
 			auto cur_event_callback_iter = cur_event_callbacks.find(cur_data_type_id);
@@ -106,15 +110,15 @@ namespace spiritsaway::event_util
 			{
 				return;
 			}
-			event_stack.insert(event);
 
+			cur_event_desc_iter->second.during_dispatch = true;
 			std::vector<std::uint32_t> cur_callbacks = std::vector<std::uint32_t>(cur_event_callback_iter->second.begin(), cur_event_callback_iter->second.end());
 			auto cur_data_wrapper = event_data_wrapper(data, cur_data_type_id);
 			for (auto one_callback : cur_callbacks)
 			{
 				invoke_callback(one_callback, event, cur_data_wrapper);
 			}
-			event_stack.erase(event);
+			cur_event_desc_iter->second.during_dispatch = false;
 		}
 		template <typename V>
 		listen_handler<K> add_listener(const K& event, std::function<void(const K&, const V&)> cur_callback, std::uint32_t cur_event_type_idx)
@@ -130,17 +134,17 @@ namespace spiritsaway::event_util
 				return cur_callback(event, *reinterpret_cast<const V*>(data.data_ptr));
 			};
 			handler_to_callbacks[cur_callback_idx] = std::make_unique< std::function<void(const K&, const event_data_wrapper&)>>(temp_lambda);
-			std::uint32_t cur_event_id = 0;
-			auto event_id_iter = event_ids.find(event);
-			if (event_id_iter == event_ids.end())
+			std::uint16_t cur_event_id = 0;
+			auto event_id_iter = event_descs.find(event);
+			if (event_id_iter == event_descs.end())
 			{
 				cur_event_id = event_id_to_callbacks.size();
-				event_ids[event] = cur_event_id;
+				event_descs[event] = event_desc{ cur_event_id, false };
 				event_id_to_callbacks.push_back({});
 			}
 			else
 			{
-				cur_event_id = event_id_iter->second;
+				cur_event_id = event_id_iter->second.event_id;
 			}
 			event_id_to_callbacks[cur_event_id][cur_event_type_idx].insert(cur_callback_idx);
 			return listen_handler<K>{ cur_callback_idx, cur_event_type_idx, cur_event_id};

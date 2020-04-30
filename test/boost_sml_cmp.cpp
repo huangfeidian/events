@@ -203,7 +203,7 @@ int main()
 {
     auto start = std::chrono::steady_clock::now();
     auto sm = test_fsm();
-    for (int i = 0; i < 1000; i++)
+    for (int i = 0; i < 1000 * 1000; i++)
     {
         if (rand() % 2)
             sm.process_event(fsm_event_t::e1, event_data{});
@@ -312,5 +312,5 @@ int main()
     }
     auto end = std::chrono::steady_clock::now();
     std::chrono::duration<double> elapsed_seconds = end-start;
-    std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
+    std::cout << "elapsed time: " << elapsed_seconds.count() * 1000 << "Ms\n";
 }

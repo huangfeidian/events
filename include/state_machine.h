@@ -15,15 +15,12 @@ namespace spiritsaway::event_util
 
 		virtual void on_create()
 		{
-			std::cout << "create state " << name() << std::endl;
 		}
 		virtual void on_enter()
 		{
-			std::cout << "enter state " << name() << std::endl;
 		}
 		virtual void on_exit()
 		{
-			std::cout << "exit state " << name() << std::endl;
 
 		}
 		virtual std::string name() const
