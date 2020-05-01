@@ -105,14 +105,14 @@ namespace spiritsaway::event_util
 		}
 	public:
 		template <typename V>
-		void dispatch(const K& event, const V& data, std::uint32_t cur_data_type_id)
+		bool dispatch(const K& event, const V& data, std::uint32_t cur_data_type_id)
 		{
 
 			auto cur_event_desc_iter = event_idxes.find(event);
 			if (cur_event_desc_iter == event_idxes.end())
 			{
 				// this event is not registered
-				return;
+				return false;
 			}
 			auto& cur_event_desc = event_descs[cur_event_desc_iter->second];
 			const auto& cur_event_callbacks = cur_event_desc.data_callbacks;
@@ -120,7 +120,7 @@ namespace spiritsaway::event_util
 			auto cur_event_callback_iter = cur_event_callbacks.find(cur_data_type_id);
 			if (cur_event_callback_iter == cur_event_callbacks.end())
 			{
-				return;
+				return false;
 			}
 
 			cur_event_desc.during_dispatch = true;
@@ -131,6 +131,7 @@ namespace spiritsaway::event_util
 				invoke_callback(one_callback, event, cur_data_wrapper);
 			}
 			cur_event_desc.during_dispatch = false;
+			return true;
 		}
 		template <typename V>
 		listen_handler<K> add_listener(const K& event, std::function<void(const K&, const V&)> cur_callback, std::uint32_t cur_data_type_idx)
@@ -231,7 +232,7 @@ namespace spiritsaway::event_util
 			return result;
 		}
 		template <typename K, typename V>
-		void dispatch(const K& event, const V& data)
+		bool dispatch(const K& event, const V& data)
 		{
 			auto& cur_dispatcher = std::get<dispatcher_impl<K>>(dispatcher_impls);
 			return cur_dispatcher.dispatch(event, data, get_type_id<V>());
