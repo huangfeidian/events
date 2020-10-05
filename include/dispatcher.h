@@ -27,7 +27,7 @@ namespace spiritsaway::event_util
 	class listen_handler
 	{
 	public:
-		listen_handler(std::uint32_t in_callback_id, std::uint32_t event_id, std::uint32_t data_type_id)
+		listen_handler(std::uint32_t event_id, std::uint32_t data_type_id, std::uint32_t in_callback_id)
 			:callback_idx(in_callback_id)
 			, data_type_idx(data_type_id)
 			, event_idx(event_id)
@@ -150,9 +150,9 @@ namespace spiritsaway::event_util
 			auto cur_event_id = get_event_idx(event);
 
 			event_descs[cur_event_id].data_callbacks[cur_data_type_idx].insert(cur_callback_idx);
-			return listen_handler<K>{ cur_callback_idx, cur_data_type_idx, cur_event_id};
+			return listen_handler<K>{ cur_event_id, cur_data_type_idx, cur_callback_idx};
 		}
-		bool remove_listener(listen_handler<K> cur_event_handler)
+		bool remove_listener(const listen_handler<K>& cur_event_handler)
 		{
 			auto callback_idx = cur_event_handler.callback_idx;
 			auto event_idx = cur_event_handler.event_idx;
@@ -193,7 +193,7 @@ namespace spiritsaway::event_util
 		template <class K>
 		std::uint32_t get_type_id()
 		{
-			static const std::uint32_t id = last_type_id++;
+			static const std::uint32_t id = ++last_type_id;
 			return id;
 		}
 
