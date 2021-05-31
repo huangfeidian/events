@@ -1,16 +1,16 @@
 ﻿#pragma once
 #include "dispatcher.h"
 #include <iostream>
-namespace spiritsaway::event_util
+namespace spiritsaway::utility::events
 {
-    template < typename... Args>
-    class state_machine;
-    template < typename... Args>
-    class state
-    {
-    public:
-        state_machine<Args...>& _owner;
-		spiritsaway::event_util::dispatcher<Args...> _dispatcher;
+	template <typename Owner, typename... Args>
+	class state_machine;
+	template <typename Owner, typename... Args>
+	class state
+	{
+	public:
+		state_machine<Owner, Args...>& m_statem;
+		dispatcher<Args...> m_dispatcher;
 
 
 		virtual void on_create()
@@ -27,56 +27,71 @@ namespace spiritsaway::event_util
 		{
 			return "invalid";
 		}
+		std::string static_name()
+		{
+			return "invalid";
+		}
 		bool change_to(const std::string& dest_state)
 		{
-			return _owner.change_to(dest_state);
+			return m_statem.change_to(dest_state);
 		}
 		template <typename K, typename T>
 		void process_event(const K& event, const T& data)
 		{
-			_dispatcher.dispatch(event, data);
+			m_dispatcher.dispatch(event, data);
 		}
-        template <typename K, typename T>
-		void notify_owner(const K& event, const T& data)
+		template <typename K, typename T>
+		void notify_statem(const K& event, const T& data)
 		{
-			_owner.local_dispatch(event, data);
+			m_statem.local_dispatch(event, data);
 		}
-    public:
-        state(state_machine<Args...>& in_owner)
-        : _owner(in_owner)
-        {
+	public:
+		state(state_machine<Owner, Args...>& in_statem)
+		: m_statem(in_statem)
+		{
 
-        }
-    };
-    template <typename... Args>
-    class state_machine
-    {
-    protected:
+		}
+	protected:
+		Owner* owner()
+		{
+			return m_statem.owner();
+		}
+	};
+	template <typename Owner, typename... Args>
+	class state_machine
+	{
+	protected:
 		const std::string default_state_name;
-        spiritsaway::event_util::dispatcher<Args...> _dispatcher;
-        std::unordered_map<std::string, std::unique_ptr<state<Args...>>> _states;
-        state<Args...>* _cur_state = nullptr;
+		dispatcher<Args...> m_dispatcher;
+		std::unordered_map<std::string, std::unique_ptr<state<Owner, Args...>>> m_states;
+		state<Owner, Args...>* m_cur_state = nullptr;
+		Owner* const m_owner;
 	public:
 
-        bool change_to(const std::string& state_name)
-        {
-            auto state_iter = _states.find(state_name);
-            if(state_iter == _states.end())
-            {
-                return false;
-            }
-            if(_cur_state)
-            {
-                _cur_state->on_exit();
-            }
-            _cur_state = state_iter->second.get();
-            _cur_state->on_enter();
+		bool change_to(const std::string& state_name)
+		{
+			auto state_iter = m_states.find(state_name);
+			if(state_iter == m_states.end())
+			{
+				return false;
+			}
+			if(m_cur_state)
+			{
+				m_cur_state->on_exit();
+			}
+			m_cur_state = state_iter->second.get();
+			m_cur_state->on_enter();
 			return true;
-        }
-        state_machine(const std::string& in_default_state)
+		}
+		state_machine(const std::string& in_default_state, Owner* in_owner)
 			: default_state_name(in_default_state)
-        {
-        }
+			, m_owner(in_owner)
+		{
+		}
+		Owner* owner()
+		{
+			return m_owner;
+		}
 		virtual void reset()
 		{
 			change_to(default_state_name);
@@ -84,35 +99,46 @@ namespace spiritsaway::event_util
 		template <typename K, typename V>
 		void process_event(const K& event, const V& data)
 		{
-			if (!_cur_state)
+			if (!m_cur_state)
 			{
 				return;
 			}
-			_cur_state->process_event(event, data);
+			m_cur_state->process_event(event, data);
 		}
 		template <typename K, typename V>
 		void local_dispatch(const K& event, const V& data)
 		{
-			_dispatcher.dispatch(event, data);
+			m_dispatcher.dispatch(event, data);
 		}
 		std::string active_state() const
 		{
-			if (!_cur_state)
+			if (!m_cur_state)
 			{
 				return "";
 			}
-			return _cur_state->name();
+			return m_cur_state->name();
 		}
-    protected:
-        
-        template <typename T, typename... kwargs>
-        void add_state(kwargs&&... arguments)
-        {
-            auto cur_state = std::make_unique<T>(*this, std::forward<kwargs>(arguments)...);
+	protected:
+		
+		template <typename T, typename... kwargs>
+		void add_state(kwargs&&... arguments)
+		{
+			auto cur_state = std::make_unique<T>(*this, std::forward<kwargs>(arguments)...);
 			cur_state->on_create();
-            _states[cur_state->name()] = std::move(cur_state);
-        }
-    };
+			m_states[cur_state->name()] = std::move(cur_state);
+		}
+	public:
+		template <typename T>
+		T* get_state()
+		{
+			auto state_iter = m_states.find(T::static_name());
+			if(state_iter == m_states.end())
+			{
+				return nullptr;
+			}
+			return dynamic_cast<T*>(state_iter->second.get());
+		}
+	};
 
 
 }

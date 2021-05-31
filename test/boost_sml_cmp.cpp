@@ -1,11 +1,12 @@
 ﻿#include <state_machine.h>
 #include <cstdlib>
 #include <chrono>
-using namespace spiritsaway::event_util;
+using namespace spiritsaway::utility::events;
 
 struct event_data
 {
 };
+struct statem_owner;
 enum class fsm_event_t
 {
     e1,
@@ -60,20 +61,24 @@ enum class fsm_event_t
     e50,
 };
 #define STATE(A, B)                                                                                      \
-    class s##A : public state<fsm_event_t>                                                               \
+    class s##A : public state<statem_owner, fsm_event_t>                                                               \
     {                                                                                                    \
     public:                                                                                              \
-        using parent = state<fsm_event_t>;                                                               \
+        using parent = state<statem_owner, fsm_event_t>;                                                 \
         using parent::parent;                                                                            \
         void on_create()                                                                                 \
         {                                                                                                \
-            _dispatcher.add_listener<fsm_event_t, event_data>(fsm_event_t::e##A, &s##A::on_event, this); \
+            m_dispatcher.add_listener<fsm_event_t, event_data>(fsm_event_t::e##A, &s##A::on_event, this); \
         }                                                                                                \
         void on_event(const fsm_event_t &event, const event_data &data)                                  \
         {                                                                                                \
             change_to("s" #B);                                                                           \
         }                                                                                                \
         std::string name() const override                                                                \
+        {                                                                                                \
+            return "s" #A;                                                                               \
+        }                                                                                                \
+        static std::string static_name()                                                                 \
         {                                                                                                \
             return "s" #A;                                                                               \
         }                                                                                                \
@@ -134,11 +139,11 @@ STATE(48, 9)
 STATE(49, 50)
 STATE(50, 1)
 
-class test_fsm : public state_machine<fsm_event_t>
+class test_fsm : public state_machine<statem_owner, fsm_event_t>
 {
 public:
-    test_fsm()
-		: state_machine<fsm_event_t>("s1")
+    test_fsm(statem_owner* in_owner)
+		: state_machine<statem_owner, fsm_event_t>("s1", in_owner)
     {
         add_state<s1>();
         add_state<s2>();
@@ -198,11 +203,20 @@ public:
         change_to("s1");
     }
 };
+struct statem_owner
+{
+    test_fsm statem;
+    statem_owner()
+        : statem(this)
+    {
 
+    }
+};
 int main()
 {
     auto start = std::chrono::steady_clock::now();
-    auto sm = test_fsm();
+    statem_owner the_owner;
+    auto& sm = the_owner.statem;
     for (int i = 0; i < 1000 * 1000; i++)
     {
         if (rand() % 2)
