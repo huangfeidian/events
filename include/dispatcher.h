@@ -210,6 +210,7 @@ namespace spiritsaway::utility::events
 		template <typename K>
 		dispatcher_impl<K>& dispatcher_for()
 		{
+			static_assert(std::disjunction_v<std::is_same<K, args>...>, "invalid dispatch type");
 			return std::get<dispatcher_impl<K>>(dispatcher_impls);
 		}
 		template <class K>
