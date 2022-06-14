@@ -24,9 +24,23 @@ namespace spiritsaway::utility::events
 		const void* data_ptr;
 	};
 	template <typename T>
+	class dispatcher_impl;
+
+	template <typename T>
 	class listen_handler
 	{
+		std::uint32_t callback_idx;
+		std::uint32_t data_type_idx;
+		std::uint32_t event_idx;
+		friend class dispatcher_impl<T>;
 	public:
+		listen_handler()
+			: callback_idx(0)
+			, data_type_idx(0)
+			,event_idx(0)
+		{
+
+		}
 		listen_handler(std::uint32_t event_id, std::uint32_t data_type_id, std::uint32_t in_callback_id)
 			:callback_idx(in_callback_id)
 			, data_type_idx(data_type_id)
@@ -34,9 +48,7 @@ namespace spiritsaway::utility::events
 		{
 
 		}
-		std::uint32_t callback_idx;
-		std::uint32_t data_type_idx;
-		std::uint32_t event_idx;
+
 
 		void reset()
 		{

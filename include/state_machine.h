@@ -67,7 +67,7 @@ namespace spiritsaway::utility::events
 		state<Owner, Args...>* m_cur_state = nullptr;
 		Owner* const m_owner;
 	public:
-
+		using state_type = state<Owner, Args...>;
 		bool change_to(const std::string& state_name)
 		{
 			auto state_iter = m_states.find(state_name);
