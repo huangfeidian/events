@@ -217,7 +217,7 @@ namespace spiritsaway::utility::events
 	{
 	private:
 		std::tuple<dispatcher_impl<args>...> dispatcher_impls;
-		std::uint32_t last_type_id = 0;
+		static std::uint32_t last_type_id;
 	private:
 		template <typename K>
 		dispatcher_impl<K>& dispatcher_for()
@@ -225,8 +225,9 @@ namespace spiritsaway::utility::events
 			static_assert(std::disjunction_v<std::is_same<K, args>...>, "invalid dispatch type");
 			return std::get<dispatcher_impl<K>>(dispatcher_impls);
 		}
+	public:
 		template <class K>
-		std::uint32_t get_type_id()
+		static std::uint32_t get_type_id()
 		{
 			static const std::uint32_t id = ++last_type_id;
 			return id;
@@ -277,4 +278,7 @@ namespace spiritsaway::utility::events
 			((dispatcher_for<args>().clear()),...);
 		}
 	};
+
+	template <typename... args>
+	std::uint32_t dispatcher<args...>::last_type_id = 0;
 }
