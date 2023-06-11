@@ -281,4 +281,106 @@ namespace spiritsaway::utility::events
 
 	template <typename... args>
 	std::uint32_t dispatcher<args...>::last_type_id = 0;
+
+
+
+	template <typename... args>
+	class typed_dispatcher;
+
+
+	template <typename... args>
+	class typed_listen_handler
+	{
+		std::uint32_t callback_idx;
+
+		friend class typed_dispatcher<args...>;
+	public:
+		typed_listen_handler()
+			: callback_idx(0)
+		{
+
+		}
+		typed_listen_handler(std::uint32_t in_callback_id)
+			:callback_idx(in_callback_id)
+		{
+
+		}
+
+
+		void reset()
+		{
+			callback_idx = 0;
+
+		}
+	};
+
+	template <typename... args>
+	class typed_dispatcher
+	{
+	private:
+		std::vector<std::shared_ptr<std::function<void(const args&...)>>> callbacks;
+		std::uint32_t dispatch_depth = 0;
+	public:
+		typed_dispatcher()
+		{
+			callbacks.push_back({});
+		}
+		typed_listen_handler<args...> add_listener(std::function<void(const args&...)> cur_callback)
+		{
+			typed_listen_handler<args...> result(callbacks.size());
+			callbacks.push_back(std::make_shared< std::function<void(const args&...)>>(cur_callback));
+			return result;
+		}
+		typed_listen_handler<args...> add_listener(void(*cur_callback)(const args&...))
+		{
+			typed_listen_handler<args...> result(callbacks.size());
+			callbacks.push_back(std::make_shared< std::function<void(const args&...)>>(cur_callback));
+			return result;
+		}
+		template <typename K>
+		typed_listen_handler<args...> add_listener( void(K::* cur_callback)(const args&...), K* self)
+		{
+			auto temp_lambda = [=](const args&... data)
+			{
+				return (self->*cur_callback)(data...);
+			};
+			typed_listen_handler<args...> result(callbacks.size());
+			callbacks.push_back(std::make_shared< std::function<void(const args&...)>>(temp_lambda));
+			return result;
+		}
+
+		bool remove_listener(typed_listen_handler<args...>& handler)
+		{
+			if (handler.callback_idx >= callbacks.size())
+			{
+				return false;
+			}
+			auto result = !!(callbacks[handler.callback_idx]);
+			callbacks[handler.callback_idx].reset();
+		}
+		bool dispatch(const args&... data)
+		{
+			if (dispatch_depth >= max_dispatch_depth)
+			{
+				return false;
+			}
+			dispatch_depth++;
+			for (int i = 1; i < callbacks.size(); i++)
+			{
+				auto& cur_callback = callbacks[i];
+				if (cur_callback)
+				{
+					cur_callback->operator()(data...);
+				}
+			}
+			dispatch_depth--;
+			return true;
+		}
+		void clear()
+		{
+			callbacks.resize(1);
+			assert(dispatch_depth == 0);
+
+		}
+	};
 }
