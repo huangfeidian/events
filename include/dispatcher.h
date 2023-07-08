@@ -359,7 +359,7 @@ namespace spiritsaway::utility::events
 			}
 			auto result = !!(callbacks[handler.callback_idx]);
 			callbacks[handler.callback_idx].reset();
-			return true;
+			return result;
 		}
 		bool dispatch(const args&... data)
 		{
@@ -430,7 +430,7 @@ namespace spiritsaway::utility::events
 			}
 			auto result = !!(callbacks[handler.callback_idx]);
 			callbacks[handler.callback_idx].reset();
-			return true;
+			return result;
 		}
 		bool dispatch()
 		{
