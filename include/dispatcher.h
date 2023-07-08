@@ -413,12 +413,12 @@ namespace spiritsaway::utility::events
 		template <typename K>
 		typed_listen_handler<void> add_listener(void(K::* cur_callback)(), K* self)
 		{
-			auto temp_lambda = [=](const args&... data)
+			auto temp_lambda = [=]()
 			{
-				return (self->*cur_callback)(data...);
+				return (self->*cur_callback)();
 			};
-			typed_listen_handler<args...> result(callbacks.size());
-			callbacks.push_back(std::make_shared< std::function<void(const args&...)>>(temp_lambda));
+			typed_listen_handler<void> result(callbacks.size());
+			callbacks.push_back(std::make_shared< std::function<void()>>(temp_lambda));
 			return result;
 		}
 
