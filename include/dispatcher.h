@@ -368,7 +368,7 @@ namespace spiritsaway::utility::events
 				return false;
 			}
 			dispatch_depth++;
-			for (int i = 1; i < callbacks.size(); i++)
+			for (std::uint32_t i = 1; i < callbacks.size(); i++)
 			{
 				auto& cur_callback = callbacks[i];
 				if (cur_callback)
@@ -439,7 +439,7 @@ namespace spiritsaway::utility::events
 				return false;
 			}
 			dispatch_depth++;
-			for (int i = 1; i < callbacks.size(); i++)
+			for (std::uint32_t i = 1; i < callbacks.size(); i++)
 			{
 				auto& cur_callback = callbacks[i];
 				if (cur_callback)
