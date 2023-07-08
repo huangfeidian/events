@@ -30,9 +30,15 @@ public:
 	}
 };
 
+void f5()
+{
+	std::cout << " void f5" << std::endl;
+}
+
 int main()
 {
 	dispatcher<int, std::string> cur_dispatcher;
+	typed_dispatcher<void> cur_void_dispatcher;
 	temp_a a;
 	auto handler_1 = cur_dispatcher.add_listener(1, &callback_1);
 	auto handler_2 = cur_dispatcher.add_listener<int, string>(2, &callback_2);
@@ -67,6 +73,9 @@ int main()
 	std::cout << "typed dispatch finish" << std::endl;
 	cur_typed_dispatcher.remove_listener(typed_handler_2);
 	cur_typed_dispatcher.dispatch(std::string("1"), string("hehe"));
+
+	cur_void_dispatcher.add_listener(f5);
+	cur_void_dispatcher.dispatch();
 	return 1;
 }
 
