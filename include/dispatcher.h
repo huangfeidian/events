@@ -22,7 +22,7 @@ namespace spiritsaway::utility::events
 		{
 
 		}
-		std::uint32_t data_type;
+		const std::uint32_t data_type;
 		const void* data_ptr;
 	};
 	template <typename T>
