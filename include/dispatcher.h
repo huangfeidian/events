@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <functional>
 #include <unordered_set>
+#include <map>
 #include <memory>
 #include <assert.h>
 
@@ -68,7 +69,7 @@ namespace spiritsaway::utility::events
 		{
 			std::uint32_t event_id;
 			std::uint32_t dispatch_depth = 0; // to stop recursive dispatch
-			std::unordered_map<std::uint32_t, std::vector<std::uint32_t>> data_callbacks; // data type_id to callbacks
+			std::map<std::uint32_t, std::vector<std::uint32_t>> data_callbacks; // data type_id to callbacks
 		};
 		std::unordered_map<K, std::uint32_t> event_idxes;
 		std::vector<event_desc> event_descs;
